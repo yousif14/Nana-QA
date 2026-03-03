@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>المقدم — مسابقة القرقاعون</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/styles.css"/>
+</head>
+<body class="host-view">
+  <!-- Decorative stars -->
+  <div class="stars-container" aria-hidden="true">
+    <div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div>
+    <div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div>
+  </div>
+  <!-- Decorative lanterns -->
+  <div class="lanterns-container" aria-hidden="true">
+    <div class="lantern"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2m0 16v2M8 5h8l1 3H7l1-3zm1 3v9h6V8M9 17h6M7 21h10"/></svg></div>
+    <div class="lantern"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v2M10 3h4"/><path d="M8 7c0-2.2 1.8-4 4-4s4 1.8 4 4v6c0 2.2-1.8 4-4 4s-4-1.8-4-4V7z"/><path d="M10 17v2m4-2v2M8 19h8"/></svg></div>
+    <div class="lantern"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"><path d="M12 2l2.9 6.3H22l-5.7 4.2 2.2 6.7L12 15.5l-6.5 3.7 2.2-6.7L2 8.3h7.1z"/></svg></div>
+    <div class="lantern"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
+    <div class="lantern"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2m0 16v2M8 5h8l1 3H7l1-3zm1 3v9h6V8M9 17h6M7 21h10"/></svg></div>
+    <div class="lantern"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"><path d="M12 2l2.9 6.3H22l-5.7 4.2 2.2 6.7L12 15.5l-6.5 3.7 2.2-6.7L2 8.3h7.1z"/></svg></div>
+    <div class="lantern"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v2M10 3h4"/><path d="M8 7c0-2.2 1.8-4 4-4s4 1.8 4 4v6c0 2.2-1.8 4-4 4s-4-1.8-4-4V7z"/><path d="M10 17v2m4-2v2M8 19h8"/></svg></div>
+    <div class="lantern"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
+  </div>
+
+  <!-- End Game Button (always visible during game) -->
+  <div class="end-game-btn hidden" id="endGameWrap">
+    <button class="btn btn--danger" id="btnEndGame">إنهاء اللعبة</button>
+  </div>
+
+  <!-- Confirmation Dialog -->
+  <div class="dialog-overlay" id="confirmDialog">
+    <div class="dialog">
+      <h3 id="dialogTitle">تأكيد</h3>
+      <p id="dialogMsg">هل أنت متأكد؟</p>
+      <div class="dialog-actions">
+        <button class="btn btn--primary" id="dialogConfirm">نعم</button>
+        <button class="btn btn--secondary" id="dialogCancel">لا</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confetti container -->
+  <div class="confetti-container" id="confetti"></div>
+
+  <div class="wrap">
+    <div class="header">
+      <div class="brand">
+        <div class="logo">🌙</div>
+        <div>
+          <div class="brand-title">مسابقة القرقاعون الثقافية</div>
+          <div class="brand-sub">شاشة المقدم</div>
+        </div>
+      </div>
+      <div class="pill" id="questionCounter"></div>
+    </div>
+
+    <!-- ===== SCREEN: Loading ===== -->
+    <div class="screen active" id="screenLoading">
+      <div class="card">
+        <div class="card-inner text-center" style="padding:60px 20px;">
+          <div style="width:44px;height:44px;border-radius:999px;border:4px solid rgba(212,175,55,.25);border-top-color:rgba(212,175,55,.95);margin:0 auto;animation:spin .9s linear infinite;"></div>
+          <p style="margin-top:16px;font-weight:800;color:var(--purple);">جاري تحميل الأسئلة...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: Lobby ===== -->
+    <div class="screen" id="screenLobby">
+      <div class="card">
+        <div class="card-inner lobby">
+          <p style="font-size:16px;font-weight:700;color:var(--muted);margin-bottom:8px;">كود اللعبة</p>
+          <div class="game-code" id="gameCodeDisplay"></div>
+          <div class="qr-wrap">
+            <div id="qrCode"></div>
+          </div>
+          <p class="hint mt-12">شارك الكود أو الـ QR مع الفرق</p>
+
+          <div style="margin-top:28px;">
+            <p style="font-weight:800;color:var(--navy);font-size:16px;margin-bottom:12px;">الفرق المنضمة (<span id="teamCount">0</span>)</p>
+            <div class="teams-grid" id="teamsGrid"></div>
+          </div>
+
+          <div class="mt-24">
+            <button class="btn btn--primary btn--lg btn--full" id="btnStart" disabled>ابدأ المسابقة</button>
+            <p class="hint mt-12">يجب انضمام فريق واحد على الأقل</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: Question ===== -->
+    <div class="screen" id="screenQuestion">
+      <div class="host-grid">
+        <!-- Main question area -->
+        <div>
+          <div class="card" id="questionCard">
+            <div class="question-header">
+              <span class="question-number" id="qNumber"></span>
+              <div id="timerHost"></div>
+            </div>
+            <div class="question-text" id="qText"></div>
+            <div id="choicesHost" class="choices"></div>
+
+            <!-- Open-answer: team responses (shown after reveal) -->
+            <div id="teamAnswersWrap" class="hidden" style="padding:0 18px 18px;">
+              <p style="font-weight:800;font-size:14px;color:var(--purple);margin-bottom:10px;">إجابات الفرق:</p>
+              <ul class="team-answers" id="teamAnswersList"></ul>
+            </div>
+
+            <!-- Reveal section -->
+            <div id="revealWrap" class="hidden" style="padding:0 18px 18px;">
+              <div class="reveal-card">
+                <div class="correct-answer" id="correctAnswerText"></div>
+                <div class="perfect-answer" id="perfectAnswerText"></div>
+              </div>
+              <ul class="ranking" id="rankingList"></ul>
+            </div>
+
+            <div class="answer-counter" id="answerCounter"></div>
+
+            <div class="action-bar">
+              <button class="btn btn--primary" id="btnReveal">الإجابة</button>
+              <button class="btn btn--gold hidden" id="btnApplyScoring">احتسب النقاط</button>
+              <button class="btn btn--secondary hidden" id="btnNext">السؤال التالي</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scoreboard sidebar -->
+        <div class="card scoreboard" id="scoreboardCard">
+          <div class="section-title">
+            <h2>لوحة النقاط</h2>
+            <span id="scoreboardCount"></span>
+          </div>
+          <div class="card-inner" style="padding:8px 0;">
+            <ul class="score-list" id="scoreList"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: Final Scoreboard ===== -->
+    <div class="screen" id="screenFinal">
+      <div class="card">
+        <div class="final-scoreboard">
+          <div style="font-size:52px;margin-bottom:12px;">🏆</div>
+          <div class="final-title">انتهت المسابقة!</div>
+          <div class="winner-name" id="winnerName"></div>
+          <ul class="final-list" id="finalList"></ul>
+          <div class="mt-24">
+            <button class="btn btn--primary btn--lg" onclick="location.reload()">مسابقة جديدة</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="./assets/config.js"></script>
+  <script src="./assets/shared.js"></script>
+  <script src="./assets/host.js"></script>
+</body>
+</html>

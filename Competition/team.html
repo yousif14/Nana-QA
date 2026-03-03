@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>فريق — مسابقة القرقاعون</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/styles.css"/>
+</head>
+<body class="team-view">
+  <!-- Decorative stars -->
+  <div class="stars-container" aria-hidden="true">
+    <div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div>
+    <div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div>
+  </div>
+  <!-- Decorative lanterns -->
+  <div class="lanterns-container" aria-hidden="true">
+    <div class="lantern"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2m0 16v2M8 5h8l1 3H7l1-3zm1 3v9h6V8M9 17h6M7 21h10"/></svg></div>
+    <div class="lantern"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v2M10 3h4"/><path d="M8 7c0-2.2 1.8-4 4-4s4 1.8 4 4v6c0 2.2-1.8 4-4 4s-4-1.8-4-4V7z"/><path d="M10 17v2m4-2v2M8 19h8"/></svg></div>
+    <div class="lantern"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"><path d="M12 2l2.9 6.3H22l-5.7 4.2 2.2 6.7L12 15.5l-6.5 3.7 2.2-6.7L2 8.3h7.1z"/></svg></div>
+    <div class="lantern"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
+    <div class="lantern"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2m0 16v2M8 5h8l1 3H7l1-3zm1 3v9h6V8M9 17h6M7 21h10"/></svg></div>
+    <div class="lantern"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"><path d="M12 2l2.9 6.3H22l-5.7 4.2 2.2 6.7L12 15.5l-6.5 3.7 2.2-6.7L2 8.3h7.1z"/></svg></div>
+    <div class="lantern"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v2M10 3h4"/><path d="M8 7c0-2.2 1.8-4 4-4s4 1.8 4 4v6c0 2.2-1.8 4-4 4s-4-1.8-4-4V7z"/><path d="M10 17v2m4-2v2M8 19h8"/></svg></div>
+    <div class="lantern"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
+  </div>
+
+  <!-- Confetti container -->
+  <div class="confetti-container" id="confetti"></div>
+
+  <div class="wrap wrap--narrow">
+    <div class="header">
+      <div class="brand">
+        <div class="logo">🌙</div>
+        <div>
+          <div class="brand-title">مسابقة القرقاعون</div>
+          <div class="brand-sub" id="teamNameHeader"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: Join ===== -->
+    <div class="screen active" id="screenJoin">
+      <div class="card">
+        <div class="section-title">
+          <h2>انضم للمسابقة</h2>
+          <span></span>
+        </div>
+        <div class="card-inner">
+          <label for="inputCode">كود اللعبة</label>
+          <input class="input input--lg" id="inputCode" type="text" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off"/>
+          <label for="inputName">اسم الفريق</label>
+          <input class="input" id="inputName" type="text" placeholder="مثال: عائلة أحمد" autocomplete="off"/>
+          <div class="mt-18">
+            <button class="btn btn--primary btn--full btn--lg" id="btnJoin">انضم</button>
+          </div>
+          <p class="hint mt-12 text-center" id="joinError" style="color:var(--danger);display:none;font-weight:800;"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: Waiting ===== -->
+    <div class="screen" id="screenWaiting">
+      <div class="card">
+        <div class="card-inner waiting">
+          <div style="font-size:52px;margin-bottom:16px;">⏳</div>
+          <p style="font-weight:800;font-size:20px;color:var(--purple);margin-bottom:8px;" id="waitTeamName"></p>
+          <p class="waiting-text">بانتظار المقدم يبدأ المسابقة...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: Question ===== -->
+    <div class="screen" id="screenQuestion">
+      <div class="card" id="teamQuestionCard">
+        <div class="question-header">
+          <span class="question-number" id="tqNumber"></span>
+          <div id="timerTeam"></div>
+        </div>
+        <div class="question-text" id="tqText"></div>
+
+        <!-- Single-Choice answers -->
+        <div id="teamChoices" class="choices"></div>
+
+        <!-- Open-Answer input -->
+        <div id="openAnswerWrap" class="hidden" style="padding:0 18px 18px;">
+          <textarea class="answer-area" id="openAnswerInput" placeholder="اكتب إجابتك هنا..."></textarea>
+          <div class="mt-12">
+            <button class="btn btn--primary btn--full" id="btnSubmitOpen">الإجابة</button>
+          </div>
+        </div>
+
+        <!-- Locked state -->
+        <div id="answerLockedWrap" class="hidden">
+          <div class="answer-locked">
+            <div style="font-size:36px;margin-bottom:8px;">✅</div>
+            <p>تم إرسال إجابتك</p>
+            <p class="hint" id="lockedAnswerText"></p>
+          </div>
+        </div>
+
+        <!-- Reveal on team side -->
+        <div id="teamRevealWrap" class="hidden" style="padding:0 18px 18px;">
+          <div class="reveal-card">
+            <div class="correct-answer" id="teamCorrectText"></div>
+            <div class="perfect-answer" id="teamPerfectText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: Final ===== -->
+    <div class="screen" id="screenFinal">
+      <div class="card">
+        <div class="final-scoreboard">
+          <div style="font-size:52px;margin-bottom:12px;">🏆</div>
+          <div class="final-title">انتهت المسابقة!</div>
+          <div class="winner-name" id="teamWinnerName"></div>
+          <ul class="final-list" id="teamFinalList"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Score (fixed bottom bar) -->
+  <div class="my-score hidden" id="myScoreBar">
+    <span class="my-score-label">نقاطك</span>
+    <span class="my-score-value" id="myScoreValue">0</span>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="./assets/config.js"></script>
+  <script src="./assets/shared.js"></script>
+  <script src="./assets/team.js"></script>
+</body>
+</html>

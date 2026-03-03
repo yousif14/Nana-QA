@@ -1,0 +1,424 @@
+// Competition/assets/host.js
+// Host controller: lobby, question flow, reveal, scoring, end game
+
+(function () {
+  "use strict";
+
+  // ===== State =====
+  var gameCode = "";
+  var questions = [];
+  var currentIndex = 0;
+  var teams = {}; // { teamId: { name, score, joinedAt } }
+  var timer = null;
+  var isRevealed = false;
+  var gRef = null; // Firebase game reference
+
+  // ===== Screen Management =====
+  function showScreen(id) {
+    var screens = document.querySelectorAll(".screen");
+    for (var i = 0; i < screens.length; i++) screens[i].classList.remove("active");
+    el(id).classList.add("active");
+  }
+
+  // ===== Init: Fetch questions & create game =====
+  async function init() {
+    showScreen("screenLoading");
+    try {
+      var raw = await fetchQuestionsFromSheet(CFG.sheetCsvUrl);
+      questions = shuffleArray(raw);
+      if (questions.length === 0) {
+        alert("لم يتم العثور على أسئلة في الجدول!");
+        return;
+      }
+      gameCode = generateGameCode();
+      gRef = gameRef(gameCode);
+
+      // Push game to Firebase
+      await gRef.set({
+        status: "lobby",
+        hostConnected: true,
+        currentQuestionIndex: 0,
+        timerEndAt: 0,
+        timerStopped: false,
+        showAnswer: false,
+        questions: questions,
+        teams: {},
+        answers: {},
+        scoring: {}
+      });
+
+      // Disconnect cleanup
+      gRef.child("hostConnected").onDisconnect().set(false);
+
+      setupLobby();
+    } catch (e) {
+      console.error(e);
+      alert("خطأ في تحميل الأسئلة: " + e.message);
+    }
+  }
+
+  // ===== Lobby =====
+  function setupLobby() {
+    showScreen("screenLobby");
+    el("gameCodeDisplay").textContent = gameCode;
+    el("questionCounter").textContent = questions.length + " سؤال";
+
+    // Generate QR code
+    var teamUrl = new URL("team.html", window.location.href);
+    teamUrl.searchParams.set("code", gameCode);
+    el("qrCode").innerHTML = "";
+    new QRCode(el("qrCode"), {
+      text: teamUrl.toString(),
+      width: 200,
+      height: 200,
+      colorDark: "#1A237E",
+      colorLight: "#FFFFFF"
+    });
+
+    // Listen for teams joining
+    gRef.child("teams").on("child_added", function (snap) {
+      var teamId = snap.key;
+      var data = snap.val();
+      teams[teamId] = data;
+      renderTeams();
+    });
+    gRef.child("teams").on("child_removed", function (snap) {
+      delete teams[snap.key];
+      renderTeams();
+    });
+  }
+
+  function renderTeams() {
+    var grid = el("teamsGrid");
+    var ids = Object.keys(teams);
+    el("teamCount").textContent = ids.length;
+    grid.innerHTML = ids.map(function (id) {
+      return '<div class="team-card">' + escapeHtml(teams[id].name) + '</div>';
+    }).join("");
+    el("btnStart").disabled = ids.length === 0;
+  }
+
+  // ===== Start Game =====
+  el("btnStart").addEventListener("click", function () {
+    if (Object.keys(teams).length === 0) return;
+    gRef.update({ status: "playing" });
+    el("endGameWrap").classList.remove("hidden");
+    currentIndex = 0;
+    showQuestion(0);
+  });
+
+  // ===== Show Question =====
+  function showQuestion(index) {
+    currentIndex = index;
+    isRevealed = false;
+    var q = questions[index];
+    if (!q) { endGame(); return; }
+
+    showScreen("screenQuestion");
+    el("qNumber").textContent = "سؤال " + (index + 1) + " من " + questions.length;
+    el("questionCounter").textContent = (index + 1) + " / " + questions.length;
+
+    // Apply slide-in animation
+    var card = el("questionCard");
+    card.classList.remove("slide-in");
+    void card.offsetWidth;
+    card.classList.add("slide-in");
+
+    // Question text
+    el("qText").textContent = q.question;
+
+    // Choices (Single-Choice only)
+    var choicesEl = el("choicesHost");
+    if (q.type === "Single-Choice") {
+      var letters = ["a", "b", "c", "d"];
+      var arabicLabels = { a: "أ", b: "ب", c: "ج", d: "د" };
+      choicesEl.innerHTML = letters.map(function (letter) {
+        return '<div class="choice" data-letter="' + letter.toUpperCase() + '">' +
+          '<span class="choice-letter">' + arabicLabels[letter] + '</span>' +
+          '<span>' + escapeHtml(q[letter]) + '</span>' +
+          '</div>';
+      }).join("");
+      choicesEl.classList.remove("hidden");
+    } else {
+      choicesEl.innerHTML = "";
+      choicesEl.classList.add("hidden");
+    }
+
+    // Reset UI
+    el("teamAnswersWrap").classList.add("hidden");
+    el("revealWrap").classList.add("hidden");
+    el("btnReveal").classList.remove("hidden");
+    el("btnApplyScoring").classList.add("hidden");
+    el("btnNext").classList.add("hidden");
+    el("answerCounter").textContent = "";
+
+    // Start timer
+    var duration = CFG.timers[q.type] || 30;
+    var endAt = Date.now() + duration * 1000;
+
+    gRef.update({
+      currentQuestionIndex: index,
+      timerEndAt: endAt,
+      timerStopped: false,
+      showAnswer: false
+    });
+
+    if (timer) timer.destroy();
+    timer = new TimerEngine(
+      function (secs, frac) {
+        el("timerHost").innerHTML = renderTimerSVG(secs, frac, secs <= 5);
+      },
+      function () {
+        playBell();
+        el("timerHost").innerHTML = renderTimerSVG(0, 0, true);
+      }
+    );
+    timer.start(endAt, duration);
+
+    // Listen for answers
+    listenForAnswers(index);
+    updateScoreboard();
+  }
+
+  // ===== Listen for team answers =====
+  function listenForAnswers(qIndex) {
+    var answersRef = gRef.child("answers/" + qIndex);
+    answersRef.off(); // clear previous listeners
+    answersRef.on("value", function (snap) {
+      var answers = snap.val() || {};
+      var count = Object.keys(answers).length;
+      var total = Object.keys(teams).length;
+      el("answerCounter").textContent = "الفرق اللي جاوبت: " + count + " / " + total;
+    });
+  }
+
+  // ===== Reveal Answer =====
+  el("btnReveal").addEventListener("click", function () {
+    if (isRevealed) return;
+    isRevealed = true;
+
+    // Stop timer
+    if (timer) timer.stop();
+    gRef.update({ timerStopped: true, showAnswer: true });
+    playBell();
+
+    var q = questions[currentIndex];
+    el("btnReveal").classList.add("hidden");
+
+    if (q.type === "Single-Choice") {
+      revealSingleChoice(q);
+    } else {
+      revealOpenAnswer(q);
+    }
+  });
+
+  function revealSingleChoice(q) {
+    // Highlight correct choice
+    var correctLetter = q.correct.toUpperCase();
+    var choices = document.querySelectorAll("#choicesHost .choice");
+    for (var i = 0; i < choices.length; i++) {
+      var ch = choices[i];
+      var letter = ch.dataset.letter;
+      if (letter === correctLetter) {
+        ch.classList.add("correct");
+        playCorrect();
+      } else {
+        ch.classList.add("wrong");
+      }
+      ch.classList.add("disabled");
+    }
+
+    // Show perfect answer
+    el("correctAnswerText").textContent = "الإجابة الصحيحة: " + correctLetter;
+    el("perfectAnswerText").textContent = q.perfect;
+    el("revealWrap").classList.remove("hidden");
+
+    // Auto-score and show ranking
+    gRef.child("answers/" + currentIndex).once("value", function (snap) {
+      var answers = snap.val() || {};
+      var scoring = calculateScoring(answers, q.correct, "Single-Choice");
+      showRanking(scoring);
+      applyScores(scoring);
+      el("btnNext").classList.remove("hidden");
+    });
+  }
+
+  function revealOpenAnswer(q) {
+    // Show team answers for host to mark
+    gRef.child("answers/" + currentIndex).once("value", function (snap) {
+      var answers = snap.val() || {};
+      var sorted = Object.keys(answers).map(function (tid) {
+        return { teamId: tid, answer: answers[tid].answer, timestamp: answers[tid].timestamp || 0 };
+      }).sort(function (a, b) { return a.timestamp - b.timestamp; });
+
+      var list = el("teamAnswersList");
+      list.innerHTML = sorted.map(function (a) {
+        var teamName = teams[a.teamId] ? teams[a.teamId].name : a.teamId;
+        return '<li class="team-answer-item" data-team-id="' + a.teamId + '">' +
+          '<span class="team-name">' + escapeHtml(teamName) + '</span>' +
+          '<span class="team-response">' + escapeHtml(a.answer || "—") + '</span>' +
+          '<button class="mark-btn" title="صحيح">✓</button>' +
+          '</li>';
+      }).join("");
+
+      el("teamAnswersWrap").classList.remove("hidden");
+
+      // Show perfect answer
+      el("correctAnswerText").textContent = "الإجابة المثالية:";
+      el("perfectAnswerText").textContent = q.perfect;
+      el("revealWrap").classList.remove("hidden");
+
+      // Show "apply scoring" button
+      el("btnApplyScoring").classList.remove("hidden");
+    });
+  }
+
+  // Toggle correct mark on open-answer items
+  document.addEventListener("click", function (e) {
+    var markBtn = e.target.closest(".mark-btn");
+    if (!markBtn) return;
+    var item = markBtn.closest(".team-answer-item");
+    if (!item) return;
+    item.classList.toggle("marked-correct");
+  });
+
+  // Apply scoring for open-answer
+  el("btnApplyScoring").addEventListener("click", function () {
+    var items = document.querySelectorAll("#teamAnswersList .team-answer-item");
+    var updates = {};
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var teamId = item.dataset.teamId;
+      var isCorrect = item.classList.contains("marked-correct");
+      updates[teamId + "/correct"] = isCorrect;
+    }
+    gRef.child("answers/" + currentIndex).update(updates).then(function () {
+      // Recalculate scoring
+      gRef.child("answers/" + currentIndex).once("value", function (snap) {
+        var answers = snap.val() || {};
+        var q = questions[currentIndex];
+        var scoring = calculateScoring(answers, q.correct, "Open-Answer");
+        showRanking(scoring);
+        applyScores(scoring);
+        el("btnApplyScoring").classList.add("hidden");
+        el("btnNext").classList.remove("hidden");
+        playCorrect();
+      });
+    });
+  });
+
+  // ===== Show Ranking =====
+  function showRanking(scoring) {
+    var list = el("rankingList");
+    list.innerHTML = scoring.map(function (s) {
+      var teamName = teams[s.teamId] ? teams[s.teamId].name : s.teamId;
+      var rankClass = s.rank === 1 ? "rank-1" : s.rank === 2 ? "rank-2" : s.rank === 3 ? "rank-3" : s.rank > 0 ? "rank-other" : "rank-wrong";
+      var rankLabel = s.rank > 0 ? s.rank : "✗";
+      return '<li>' +
+        '<span class="rank-badge ' + rankClass + '">' + rankLabel + '</span>' +
+        '<span class="rank-name">' + escapeHtml(teamName) + '</span>' +
+        '<span class="rank-points ' + (s.points === 0 ? 'zero' : '') + '">+' + s.points + '</span>' +
+        '</li>';
+    }).join("");
+  }
+
+  // ===== Apply Scores =====
+  function applyScores(scoring) {
+    var updates = {};
+    scoring.forEach(function (s) {
+      if (!teams[s.teamId]) return;
+      teams[s.teamId].score = (teams[s.teamId].score || 0) + s.points;
+      updates["teams/" + s.teamId + "/score"] = teams[s.teamId].score;
+    });
+    updates["scoring/" + currentIndex] = scoring;
+    gRef.update(updates);
+    updateScoreboard();
+  }
+
+  // ===== Update Scoreboard =====
+  function updateScoreboard() {
+    var sorted = Object.keys(teams).map(function (id) {
+      return { id: id, name: teams[id].name, score: teams[id].score || 0 };
+    }).sort(function (a, b) { return b.score - a.score; });
+
+    el("scoreboardCount").textContent = sorted.length + " فرق";
+    el("scoreList").innerHTML = sorted.map(function (t, i) {
+      return '<li class="score-item">' +
+        '<span class="score-rank">' + (i + 1) + '</span>' +
+        '<span class="score-name">' + escapeHtml(t.name) + '</span>' +
+        '<span class="score-pts">' + t.score + '</span>' +
+        '</li>';
+    }).join("");
+  }
+
+  // ===== Next Question =====
+  el("btnNext").addEventListener("click", function () {
+    var nextIndex = currentIndex + 1;
+    if (nextIndex >= questions.length) {
+      endGame();
+    } else {
+      showQuestion(nextIndex);
+    }
+  });
+
+  // ===== End Game =====
+  function endGame() {
+    gRef.update({ status: "ended" });
+    if (timer) timer.destroy();
+    el("endGameWrap").classList.add("hidden");
+
+    showScreen("screenFinal");
+
+    var sorted = Object.keys(teams).map(function (id) {
+      return { id: id, name: teams[id].name, score: teams[id].score || 0 };
+    }).sort(function (a, b) { return b.score - a.score; });
+
+    if (sorted.length > 0) {
+      el("winnerName").textContent = sorted[0].name;
+      launchConfetti(el("confetti"), 100);
+      playCorrect();
+    }
+
+    el("finalList").innerHTML = sorted.map(function (t, i) {
+      var medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i + 1);
+      return '<li class="final-item">' +
+        '<span class="final-rank">' + medal + '</span>' +
+        '<span class="final-name">' + escapeHtml(t.name) + '</span>' +
+        '<span class="final-score">' + t.score + '</span>' +
+        '</li>';
+    }).join("");
+  }
+
+  // ===== End Game Button (with confirmation) =====
+  el("btnEndGame").addEventListener("click", function () {
+    showConfirm("إنهاء اللعبة", "هل أنت متأكد من إنهاء اللعبة وعرض النتائج النهائية؟", function () {
+      endGame();
+    });
+  });
+
+  // ===== Confirmation Dialog =====
+  var pendingConfirm = null;
+
+  function showConfirm(title, msg, onConfirm) {
+    el("dialogTitle").textContent = title;
+    el("dialogMsg").textContent = msg;
+    el("confirmDialog").classList.add("active");
+    pendingConfirm = onConfirm;
+  }
+
+  el("dialogConfirm").addEventListener("click", function () {
+    el("confirmDialog").classList.remove("active");
+    if (pendingConfirm) {
+      pendingConfirm();
+      pendingConfirm = null;
+    }
+  });
+
+  el("dialogCancel").addEventListener("click", function () {
+    el("confirmDialog").classList.remove("active");
+    pendingConfirm = null;
+  });
+
+  // ===== Start =====
+  init();
+})();

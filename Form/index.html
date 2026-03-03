@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>يمعة القرقاعون 1447ه</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+
+<body>
+  <!-- Decorative stars -->
+  <div class="stars-container" aria-hidden="true">
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+  </div>
+
+  <!-- Decorative lanterns -->
+  <div class="lanterns-container" aria-hidden="true">
+    <!-- Classic rectangular lantern -->
+    <div class="lantern"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2m0 16v2M8 5h8l1 3H7l1-3zm1 3v9h6V8M9 17h6M7 21h10"/></svg></div>
+    <!-- Rounded fanous -->
+    <div class="lantern"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v2M10 3h4"/><path d="M8 7c0-2.2 1.8-4 4-4s4 1.8 4 4v6c0 2.2-1.8 4-4 4s-4-1.8-4-4V7z"/><path d="M10 17v2m4-2v2M8 19h8"/></svg></div>
+    <!-- Star -->
+    <div class="lantern"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"><path d="M12 2l2.9 6.3H22l-5.7 4.2 2.2 6.7L12 15.5l-6.5 3.7 2.2-6.7L2 8.3h7.1z"/></svg></div>
+    <!-- Crescent moon -->
+    <div class="lantern"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
+    <!-- Classic rectangular lantern -->
+    <div class="lantern"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2m0 16v2M8 5h8l1 3H7l1-3zm1 3v9h6V8M9 17h6M7 21h10"/></svg></div>
+    <!-- Star -->
+    <div class="lantern"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linejoin="round"><path d="M12 2l2.9 6.3H22l-5.7 4.2 2.2 6.7L12 15.5l-6.5 3.7 2.2-6.7L2 8.3h7.1z"/></svg></div>
+    <!-- Rounded fanous -->
+    <div class="lantern"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v2M10 3h4"/><path d="M8 7c0-2.2 1.8-4 4-4s4 1.8 4 4v6c0 2.2-1.8 4-4 4s-4-1.8-4-4V7z"/><path d="M10 17v2m4-2v2M8 19h8"/></svg></div>
+    <!-- Crescent moon -->
+    <div class="lantern"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
+  </div>
+
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">🌙</div>
+        <div class="title">
+          <h1>يمعة القرقاعون 1447ه</h1>
+          <p>دخل جم واحد انتو و ان شاء الله بينحسب المجموع وبعدها طق على "ثبت"</p>
+        </div>
+      </div>
+      <div class="pill">قرقاعون يا ناس</div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT: FORM -->
+      <div class="card">
+        <div class="section-title">
+          <h2>بيانات اللي يسجل</h2>
+          <span></span>
+        </div>
+
+        <div class="card-inner">
+          <div class="row">
+            <div>
+              <label for="name">الاسم الكريم</label>
+              <input id="name" type="text" placeholder="الاسم" autocomplete="name" required />
+              <div class="warn" id="warnName">اكتب اسمك لاهنت</div>
+            </div>
+
+            <div>
+              <label for="phone">رقم التواصل</label>
+              <input
+                id="phone"
+                type="tel"
+                placeholder=" 3XXXXXXX "
+                inputmode="numeric"
+                autocomplete="tel"
+                required
+                minlength="8"
+                pattern="^[0-9]{8,}$"
+              />
+              <div class="hint">بدون +973 </div>
+              <div class="warn" id="warnPhone">تأكد من الرقم اللخو</div>
+            </div>
+          </div>
+
+          <div class="section-title section-split">
+            <h2>عدد الحضور من طرفك</h2>
+            <span>اضغط + / -</span>
+          </div>
+
+          <!-- CATEGORIES -->
+          <div class="cat">
+            <div class="cat__title">
+              الصغار (إبتدائي وتحت) <span class="cat__price">(2.5 د.ب للشخص)</span>
+            </div>
+            <div class="stepper" dir="rtl">
+              <button type="button" class="stepper__btn" data-stepper="minus" aria-label="نقص واحد">−</button>
+              <input id="cat1" class="stepper__value" type="text" value="0" readonly data-stepper="value" data-min="0" data-max="99" />
+              <button type="button" class="stepper__btn" data-stepper="plus" aria-label="زِد واحد">+</button>
+            </div>
+          </div>
+
+          <div class="cat">
+            <div class="cat__title">
+              الكبار (إعدادي فما فوق) <span class="cat__price">(5 د.ب للشخص)</span>
+            </div>
+            <div class="stepper" dir="rtl">
+              <button type="button" class="stepper__btn" data-stepper="minus" aria-label="نقص واحد">−</button>
+              <input id="cat2" class="stepper__value" type="text" value="0" readonly data-stepper="value" data-min="0" data-max="99" />
+              <button type="button" class="stepper__btn" data-stepper="plus" aria-label="زِد واحد">+</button>
+            </div>
+          </div>
+
+          <div class="warn" id="warnZero">الرجاء إدخال عدد واحد على الأقل قبل الإرسال.</div>
+
+          <footer>
+            أول ما تثبت بتنعرض لك صفحة تشمل المجموع و الآيبان و الQR للدفع.
+          </footer>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="rightCol">
+
+        <!-- Total (separate card, sticky) -->
+        <div class="card summary">
+          <div class="section-title">
+            <h2>مجموع المبلغ</h2>
+            <span>يتم تحديثه حار بحار</span>
+          </div>
+
+          <div class="totalBox">
+            <div class="mini">مجموع المبلغ</div>
+            <div class="total" id="total">0.00 د.ب</div>
+            <div class="breakdown" id="breakdown">—</div>
+            <div class="hint" style="margin-top:10px">...</div>
+          </div>
+        </div>
+
+      </div> <!-- end .rightCol -->
+    </div> <!-- end .grid -->
+
+    <div class="actions">
+      <button class="btnPrimary" id="submit" type="button">ثبت</button>
+    </div>
+  </div> <!-- end .wrap -->
+
+  <!-- Loading Overlay (keep at end of body) -->
+  <div class="loadingOverlay" id="loadingOverlay" aria-hidden="true">
+    <div class="loadingCard" role="status" aria-live="polite">
+      <div class="spinner"></div>
+      <p class="loadingText">سلوااات !!</p>
+    </div>
+  </div>
+
+  <script src="./assets/config.js" defer></script>
+  <script src="./assets/app.js" defer></script>
+</body>
+</html>
