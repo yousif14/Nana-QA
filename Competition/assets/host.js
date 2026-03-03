@@ -147,8 +147,10 @@
     // Reset UI
     el("teamAnswersWrap").classList.add("hidden");
     el("revealWrap").classList.add("hidden");
+    el("manualRankWrap").classList.add("hidden");
     el("btnReveal").classList.remove("hidden");
     el("btnApplyScoring").classList.add("hidden");
+    el("btnManualRank").classList.add("hidden");
     el("btnNext").classList.add("hidden");
     el("answerCounter").textContent = "";
 
@@ -268,21 +270,20 @@
       el("perfectAnswerText").textContent = q.perfect;
       el("revealWrap").classList.remove("hidden");
 
-      // Show "apply scoring" button
+      // Show "apply scoring" and "manual rank" buttons
       el("btnApplyScoring").classList.remove("hidden");
+      el("btnManualRank").classList.remove("hidden");
     });
   }
 
-  // Toggle correct mark on open-answer items
+  // Toggle correct mark on open-answer items (whole row is clickable)
   document.addEventListener("click", function (e) {
-    var markBtn = e.target.closest(".mark-btn");
-    if (!markBtn) return;
-    var item = markBtn.closest(".team-answer-item");
-    if (!item) return;
+    var item = e.target.closest(".team-answer-item");
+    if (!item || item.closest("#manualRankList")) return; // skip manual ranking items
     item.classList.toggle("marked-correct");
   });
 
-  // Apply scoring for open-answer
+  // Apply scoring for open-answer (auto-rank by timestamp)
   el("btnApplyScoring").addEventListener("click", function () {
     var items = document.querySelectorAll("#teamAnswersList .team-answer-item");
     var updates = {};
@@ -301,9 +302,118 @@
         showRanking(scoring);
         applyScores(scoring);
         el("btnApplyScoring").classList.add("hidden");
+        el("btnManualRank").classList.add("hidden");
+        el("manualRankWrap").classList.add("hidden");
         el("btnNext").classList.remove("hidden");
         playCorrect();
       });
+    });
+  });
+
+  // ===== Manual Ranking =====
+  el("btnManualRank").addEventListener("click", function () {
+    // Collect only teams marked correct
+    var items = document.querySelectorAll("#teamAnswersList .team-answer-item");
+    var correctTeams = [];
+    var wrongTeams = [];
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var tid = item.dataset.teamId;
+      var tName = teams[tid] ? teams[tid].name : tid;
+      if (item.classList.contains("marked-correct")) {
+        correctTeams.push({ teamId: tid, name: tName });
+      } else {
+        wrongTeams.push({ teamId: tid, name: tName });
+      }
+    }
+
+    if (correctTeams.length === 0) {
+      // No correct teams, nothing to rank
+      return;
+    }
+
+    // Build ranking panel
+    var list = el("manualRankList");
+    list.innerHTML = correctTeams.map(function (t) {
+      return '<li class="team-answer-item manual-rank-item" data-team-id="' + t.teamId + '" data-rank="0">' +
+        '<span class="rank-cycle-btn" title="اضغط لتغيير الترتيب">—</span>' +
+        '<span class="team-name">' + escapeHtml(t.name) + '</span>' +
+        '</li>';
+    }).join("");
+
+    el("manualRankWrap").classList.remove("hidden");
+    // Store wrongTeams for later use
+    el("manualRankWrap").dataset.wrongTeams = JSON.stringify(wrongTeams);
+  });
+
+  // Cycle rank on click (—, 1st, 2nd, 3rd)
+  document.addEventListener("click", function (e) {
+    var badge = e.target.closest(".rank-cycle-btn");
+    if (!badge) return;
+    var item = badge.closest(".manual-rank-item");
+    if (!item) return;
+    var rank = parseInt(item.dataset.rank) || 0;
+    rank = (rank + 1) % 4; // 0=none, 1=1st, 2=2nd, 3=3rd
+    item.dataset.rank = rank;
+    var labels = ["—", "1", "2", "3"];
+    var classes = ["", "rank-1", "rank-2", "rank-3"];
+    badge.textContent = labels[rank];
+    badge.className = "rank-cycle-btn" + (classes[rank] ? " " + classes[rank] : "");
+  });
+
+  // Confirm manual ranking
+  el("btnConfirmRank").addEventListener("click", function () {
+    var items = document.querySelectorAll("#manualRankList .manual-rank-item");
+    var scoringTiers = CFG.scoring; // [7, 5, 3]
+    var scoring = [];
+
+    // First update correct marks in Firebase
+    var answerItems = document.querySelectorAll("#teamAnswersList .team-answer-item");
+    var updates = {};
+    for (var i = 0; i < answerItems.length; i++) {
+      var ai = answerItems[i];
+      var tid = ai.dataset.teamId;
+      var isCorrect = ai.classList.contains("marked-correct");
+      updates[tid + "/correct"] = isCorrect;
+    }
+
+    // Build scoring from manual ranks
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var teamId = item.dataset.teamId;
+      var rank = parseInt(item.dataset.rank) || 0;
+      var points;
+      if (rank >= 1 && rank <= 3) {
+        points = rank <= scoringTiers.length ? scoringTiers[rank - 1] : 1;
+      } else {
+        points = 1; // correct but unranked gets participation point
+      }
+      scoring.push({ teamId: teamId, points: points, rank: rank || 4 });
+    }
+
+    // Add wrong teams with 0 points
+    var wrongTeams = [];
+    try { wrongTeams = JSON.parse(el("manualRankWrap").dataset.wrongTeams || "[]"); } catch (e) {}
+    wrongTeams.forEach(function (t) {
+      scoring.push({ teamId: t.teamId, points: 0, rank: -1 });
+    });
+
+    // Sort by rank for display (1st, 2nd, 3rd, other, wrong)
+    scoring.sort(function (a, b) {
+      if (a.rank === -1 && b.rank === -1) return 0;
+      if (a.rank === -1) return 1;
+      if (b.rank === -1) return -1;
+      return a.rank - b.rank;
+    });
+
+    gRef.child("answers/" + currentIndex).update(updates).then(function () {
+      showRanking(scoring);
+      applyScores(scoring);
+      el("btnApplyScoring").classList.add("hidden");
+      el("btnManualRank").classList.add("hidden");
+      el("manualRankWrap").classList.add("hidden");
+      el("btnNext").classList.remove("hidden");
+      playCorrect();
     });
   });
 

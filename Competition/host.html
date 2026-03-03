@@ -123,9 +123,19 @@
 
             <div class="answer-counter" id="answerCounter"></div>
 
+            <!-- Manual ranking panel (hidden by default) -->
+            <div id="manualRankWrap" class="hidden" style="padding:0 18px 18px;">
+              <p style="font-weight:800;font-size:14px;color:var(--purple);margin-bottom:10px;">ترتيب يدوي — اضغط على الرقم لتغييره:</p>
+              <ul class="team-answers" id="manualRankList"></ul>
+              <div class="mt-12" style="text-align:center;">
+                <button class="btn btn--gold" id="btnConfirmRank">تطبيق الترتيب</button>
+              </div>
+            </div>
+
             <div class="action-bar">
               <button class="btn btn--primary" id="btnReveal">الإجابة</button>
               <button class="btn btn--gold hidden" id="btnApplyScoring">احتسب النقاط</button>
+              <button class="btn btn--secondary hidden" id="btnManualRank">ترتيب يدوي</button>
               <button class="btn btn--secondary hidden" id="btnNext">السؤال التالي</button>
             </div>
           </div>

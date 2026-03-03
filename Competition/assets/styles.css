@@ -361,6 +361,20 @@ label{display:block;margin:14px 0 8px;font-weight:700;font-size:14px;color:var(-
   border-color:var(--green);background:var(--green);color:#fff;
 }
 
+/* Manual ranking: cycle button */
+.rank-cycle-btn{
+  width:36px;height:36px;border-radius:10px;
+  display:grid;place-items:center;font-weight:900;font-size:16px;
+  color:var(--purple);background:rgba(212,175,55,.1);
+  cursor:pointer;transition:all .15s ease;flex-shrink:0;
+  border:2px solid var(--line);user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.rank-cycle-btn:active{transform:scale(.92);}
+.rank-cycle-btn.rank-1{background:linear-gradient(135deg, #FFD700, #FFA000);color:#fff;border-color:transparent;}
+.rank-cycle-btn.rank-2{background:linear-gradient(135deg, #C0C0C0, #9E9E9E);color:#fff;border-color:transparent;}
+.rank-cycle-btn.rank-3{background:linear-gradient(135deg, #CD7F32, #A0522D);color:#fff;border-color:transparent;}
+
 /* ================================
    SCOREBOARD
    ================================ */
@@ -511,6 +525,94 @@ label{display:block;margin:14px 0 8px;font-weight:700;font-size:14px;color:var(-
 @keyframes confettiFall{
   0%{transform:translateY(0) rotate(0deg);opacity:1;}
   100%{transform:translateY(110vh) rotate(720deg);opacity:0;}
+}
+
+/* ================================
+   POINTS POPUP (team device)
+   ================================ */
+.points-popup{
+  position:fixed;inset:0;z-index:9000;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+.points-popup.hidden{display:none !important;}
+
+.points-popup-text{
+  font-weight:900;font-family:"Cairo", sans-serif;
+  text-align:center;z-index:1;
+}
+.points-popup-particles{
+  position:absolute;inset:0;overflow:hidden;
+}
+.pp-particle{
+  position:absolute;width:8px;height:8px;border-radius:50%;
+  top:50%;left:50%;
+  animation:ppBurst .8s ease-out var(--delay, 0s) forwards;
+}
+@keyframes ppBurst{
+  0%{transform:translate(-50%,-50%) rotate(var(--angle)) translateY(0);opacity:1;}
+  100%{transform:translate(-50%,-50%) rotate(var(--angle)) translateY(-120px);opacity:0;}
+}
+
+/* Gold — +7 (1st place) */
+.points-gold{background:radial-gradient(circle, rgba(255,215,0,.3) 0%, rgba(255,215,0,0) 70%);}
+.points-gold .points-popup-text{
+  font-size:96px;color:#FFD700;
+  text-shadow:0 0 40px rgba(255,215,0,.6), 0 0 80px rgba(255,215,0,.3);
+  animation:ppGoldBounce .6s cubic-bezier(.34,1.56,.64,1);
+}
+.points-gold .pp-particle{background:#FFD700;}
+@keyframes ppGoldBounce{
+  0%{opacity:0;transform:scale(0.3);}
+  50%{transform:scale(1.15);}
+  100%{opacity:1;transform:scale(1);}
+}
+
+/* Silver — +5 (2nd place) */
+.points-silver{background:radial-gradient(circle, rgba(192,192,192,.2) 0%, transparent 70%);}
+.points-silver .points-popup-text{
+  font-size:80px;color:#B0BEC5;
+  text-shadow:0 0 30px rgba(192,192,192,.5);
+  animation:ppSilverShine .5s ease-out;
+}
+.points-silver .pp-particle{background:#C0C0C0;}
+@keyframes ppSilverShine{
+  0%{opacity:0;transform:scale(0.5) rotate(-5deg);}
+  100%{opacity:1;transform:scale(1) rotate(0deg);}
+}
+
+/* Bronze — +3 (3rd place) */
+.points-bronze{background:radial-gradient(circle, rgba(205,127,50,.15) 0%, transparent 70%);}
+.points-bronze .points-popup-text{
+  font-size:72px;color:#CD7F32;
+  text-shadow:0 0 20px rgba(205,127,50,.4);
+  animation:ppBronzePulse .5s ease-out;
+}
+.points-bronze .pp-particle{background:#CD7F32;}
+@keyframes ppBronzePulse{
+  0%{opacity:0;transform:scale(0.6);}
+  60%{transform:scale(1.05);}
+  100%{opacity:1;transform:scale(1);}
+}
+
+/* Simple — +1 (participation) */
+.points-simple .points-popup-text{
+  font-size:56px;color:var(--green);opacity:0;
+  animation:ppSimpleFade 2s ease forwards;
+}
+@keyframes ppSimpleFade{
+  0%{opacity:0;transform:translateY(20px);}
+  20%{opacity:.8;transform:translateY(0);}
+  80%{opacity:.8;}
+  100%{opacity:0;}
+}
+
+/* Dismiss animation */
+.points-popup.points-dismiss .points-popup-text{
+  animation:ppDismiss .4s ease forwards !important;
+}
+@keyframes ppDismiss{
+  to{opacity:0;transform:scale(0.5);}
 }
 
 /* ================================

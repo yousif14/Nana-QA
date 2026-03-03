@@ -15,12 +15,74 @@
   var timer = null;
   var myScore = 0;
 
+  var SESSION_KEY = "comp_team_session";
+
   // ===== Screen Management =====
   function showScreen(id) {
     var screens = document.querySelectorAll(".screen");
     for (var i = 0; i < screens.length; i++) screens[i].classList.remove("active");
     el(id).classList.add("active");
   }
+
+  // ===== Session Persistence =====
+  function saveSession() {
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({
+        gameCode: gameCode,
+        teamId: teamId,
+        teamName: teamName
+      }));
+    } catch (e) { /* localStorage unavailable */ }
+  }
+
+  function clearSession() {
+    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+  }
+
+  function loadSession() {
+    try {
+      var raw = localStorage.getItem(SESSION_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  // ===== Try restoring saved session =====
+  (async function tryRestore() {
+    var saved = loadSession();
+    if (!saved) return; // no saved session, show join screen normally
+
+    var ref = gameRef(saved.gameCode);
+    try {
+      var statusSnap = await ref.child("status").once("value");
+      if (!statusSnap.exists()) { clearSession(); return; }
+
+      var status = statusSnap.val();
+      if (status === "ended") { clearSession(); return; }
+
+      // Verify team entry still exists
+      var teamSnap = await ref.child("teams/" + saved.teamId).once("value");
+      if (!teamSnap.exists()) { clearSession(); return; }
+
+      // Restore state
+      gameCode = saved.gameCode;
+      teamId = saved.teamId;
+      teamName = saved.teamName;
+      gRef = ref;
+
+      el("teamNameHeader").textContent = teamName;
+
+      if (status === "lobby") {
+        el("waitTeamName").textContent = teamName;
+        showScreen("screenWaiting");
+        waitForGameStart();
+      } else if (status === "playing") {
+        startListening();
+      }
+    } catch (e) {
+      console.error("Session restore failed:", e);
+      clearSession();
+    }
+  })();
 
   // ===== Auto-fill code from URL =====
   var urlParams = new URLSearchParams(window.location.search);
@@ -79,8 +141,8 @@
         joinedAt: firebase.database.ServerValue.TIMESTAMP
       });
 
-      // Disconnect cleanup
-      gRef.child("teams/" + teamId).onDisconnect().remove();
+      // Save session for reconnection on refresh
+      saveSession();
 
       el("teamNameHeader").textContent = teamName;
 
@@ -148,8 +210,13 @@
 
     // Listen for score updates
     gRef.child("teams/" + teamId + "/score").on("value", function (snap) {
-      myScore = snap.val() || 0;
+      var newScore = snap.val() || 0;
+      var delta = newScore - myScore;
+      myScore = newScore;
       el("myScoreValue").textContent = myScore;
+      if (delta > 0) {
+        showPointsPopup(delta);
+      }
     });
 
     // Listen for game end
@@ -289,9 +356,55 @@
     el("teamRevealWrap").classList.remove("hidden");
   }
 
+  // ===== Points Popup =====
+  function showPointsPopup(delta) {
+    var popup = el("pointsPopup");
+    var text = el("pointsPopupText");
+    var particles = el("pointsParticles");
+
+    // Determine weight class
+    var weightClass;
+    if (delta >= 7) { weightClass = "points-gold"; }
+    else if (delta >= 5) { weightClass = "points-silver"; }
+    else if (delta >= 3) { weightClass = "points-bronze"; }
+    else { weightClass = "points-simple"; }
+
+    // Reset
+    popup.className = "points-popup " + weightClass;
+    text.textContent = "+" + delta;
+    particles.innerHTML = "";
+
+    // Add particles for gold/silver/bronze
+    if (weightClass !== "points-simple") {
+      for (var i = 0; i < 12; i++) {
+        var p = document.createElement("div");
+        p.className = "pp-particle";
+        p.style.setProperty("--angle", (i * 30) + "deg");
+        p.style.setProperty("--delay", (Math.random() * 0.3) + "s");
+        particles.appendChild(p);
+      }
+    }
+
+    // Play sound for 1st/2nd/3rd
+    if (delta >= 3) { playCorrect(); }
+
+    // Show
+    popup.classList.remove("hidden");
+
+    // Auto-dismiss
+    setTimeout(function () {
+      popup.classList.add("points-dismiss");
+      setTimeout(function () {
+        popup.classList.add("hidden");
+        popup.classList.remove("points-dismiss");
+      }, 400);
+    }, 2500);
+  }
+
   // ===== Final Screen =====
   function showFinalScreen() {
     if (timer) timer.destroy();
+    clearSession();
     showScreen("screenFinal");
     el("myScoreBar").classList.add("hidden");
 
