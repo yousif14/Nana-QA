@@ -496,7 +496,7 @@ label{display:block;margin:14px 0 8px;font-weight:700;font-size:14px;color:var(-
 .answer-locked{
   text-align:center;padding:24px;
 }
-.answer-locked p{font-weight:800;font-size:16px;color:var(--green);}
+.answer-locked p{font-weight:800;font-size:16px;color:var(--muted);}
 
 /* Waiting state */
 .waiting{text-align:center;padding:50px 20px;}
@@ -635,3 +635,66 @@ label{display:block;margin:14px 0 8px;font-weight:700;font-size:14px;color:var(-
    SPINNER (reused from Form)
    ================================ */
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ================================
+   ALL-ANSWERED INDICATOR
+   ================================ */
+.all-answered{
+  background:rgba(76,175,80,.15);color:var(--green) !important;
+  border-radius:999px;padding:6px 14px;
+  display:inline-block;
+}
+.all-answered::before{content:"✓ ";}
+
+/* ================================
+   POINTS BADGE (persistent small pill)
+   ================================ */
+.points-popup.points-badge{
+  inset:auto;position:fixed;bottom:60px;right:16px;
+  width:auto;height:auto;min-width:48px;
+  background:rgba(255,255,255,.95) !important;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--line);border-radius:999px;
+  padding:6px 14px;display:flex !important;
+  align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(0,0,0,.1);
+  animation:badgeShrink .4s ease forwards;
+}
+.points-popup.points-badge .points-popup-text{
+  font-size:16px !important;
+  text-shadow:none !important;
+  animation:none !important;
+  opacity:1 !important;
+}
+.points-popup.points-badge .points-popup-particles{display:none;}
+.points-popup.points-badge.points-gold .points-popup-text{color:#D4AF37;}
+.points-popup.points-badge.points-silver .points-popup-text{color:#9E9E9E;}
+.points-popup.points-badge.points-bronze .points-popup-text{color:#CD7F32;}
+.points-popup.points-badge.points-simple .points-popup-text{color:var(--green);}
+@keyframes badgeShrink{
+  0%{opacity:0;transform:scale(1.5);}
+  100%{opacity:1;transform:scale(1);}
+}
+
+/* ================================
+   HOST TV/BIG-SCREEN SCALING
+   ================================ */
+.host-view .question-text{font-size:36px;}
+.host-view .choice{padding:20px 28px;font-size:22px;}
+.host-view .choice-letter{width:44px;height:44px;font-size:18px;}
+.host-view .answer-counter{font-size:18px;}
+.host-view .reveal-card{padding:28px;}
+.host-view .correct-answer{font-size:26px;}
+.host-view .perfect-answer{font-size:18px;}
+.host-view .ranking li{padding:14px 18px;}
+.host-view .rank-badge{width:40px;height:40px;font-size:18px;}
+.host-view .rank-name{font-size:18px;}
+.host-view .rank-points{font-size:20px;}
+.host-view .action-bar .btn{padding:16px 32px;font-size:18px;}
+.host-view .team-answer-item{padding:16px 18px;}
+.host-view .team-answer-item .team-name{font-size:18px;}
+.host-view .team-answer-item .team-response{font-size:18px;}
+.host-view .score-item{padding:14px 18px;}
+.host-view .score-name{font-size:18px;}
+.host-view .score-pts{font-size:22px;}
+.host-view .game-code{font-size:80px;letter-spacing:16px;}

@@ -249,6 +249,11 @@
     el("answerLockedWrap").classList.add("hidden");
     el("teamRevealWrap").classList.add("hidden");
 
+    // Hide points badge from previous question
+    var pointsPopup = el("pointsPopup");
+    pointsPopup.classList.add("hidden");
+    pointsPopup.classList.remove("points-badge");
+
     if (q.type === "Single-Choice") {
       el("teamChoices").classList.remove("hidden");
       el("openAnswerWrap").classList.add("hidden");
@@ -391,12 +396,12 @@
     // Show
     popup.classList.remove("hidden");
 
-    // Auto-dismiss
+    // Auto-dismiss → shrink to badge
     setTimeout(function () {
       popup.classList.add("points-dismiss");
       setTimeout(function () {
-        popup.classList.add("hidden");
         popup.classList.remove("points-dismiss");
+        popup.classList.add("points-badge");
       }, 400);
     }, 2500);
   }

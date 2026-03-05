@@ -13,6 +13,25 @@
   var isRevealed = false;
   var gRef = null; // Firebase game reference
 
+  var HOST_SESSION_KEY = "comp_host_session";
+
+  function saveHostSession() {
+    try {
+      localStorage.setItem(HOST_SESSION_KEY, JSON.stringify({ gameCode: gameCode }));
+    } catch (e) {}
+  }
+
+  function clearHostSession() {
+    try { localStorage.removeItem(HOST_SESSION_KEY); } catch (e) {}
+  }
+
+  function loadHostSession() {
+    try {
+      var raw = localStorage.getItem(HOST_SESSION_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
   // ===== Screen Management =====
   function showScreen(id) {
     var screens = document.querySelectorAll(".screen");
@@ -20,9 +39,52 @@
     el(id).classList.add("active");
   }
 
-  // ===== Init: Fetch questions & create game =====
+  // ===== Init: Fetch questions & create game (with session restore) =====
   async function init() {
     showScreen("screenLoading");
+
+    // Try restoring existing session
+    var saved = loadHostSession();
+    if (saved) {
+      try {
+        var ref = gameRef(saved.gameCode);
+        var statusSnap = await ref.child("status").once("value");
+        if (statusSnap.exists()) {
+          var status = statusSnap.val();
+          if (status === "lobby" || status === "playing") {
+            gameCode = saved.gameCode;
+            gRef = ref;
+            gRef.child("hostConnected").set(true);
+            gRef.child("hostConnected").onDisconnect().set(false);
+
+            var qSnap = await gRef.child("questions").once("value");
+            questions = qSnap.val() || [];
+
+            var teamsSnap = await gRef.child("teams").once("value");
+            var teamsData = teamsSnap.val() || {};
+            Object.keys(teamsData).forEach(function (id) {
+              teams[id] = teamsData[id];
+            });
+
+            if (status === "lobby") {
+              setupLobby();
+            } else {
+              var idxSnap = await gRef.child("currentQuestionIndex").once("value");
+              var idx = idxSnap.val() || 0;
+              el("endGameWrap").classList.remove("hidden");
+              restoreQuestion(idx);
+            }
+            return;
+          }
+        }
+        clearHostSession();
+      } catch (e) {
+        console.error("Session restore failed:", e);
+        clearHostSession();
+      }
+    }
+
+    // Fresh game creation
     try {
       var raw = await fetchQuestionsFromSheet(CFG.sheetCsvUrl);
       questions = shuffleArray(raw);
@@ -33,7 +95,6 @@
       gameCode = generateGameCode();
       gRef = gameRef(gameCode);
 
-      // Push game to Firebase
       await gRef.set({
         status: "lobby",
         hostConnected: true,
@@ -47,7 +108,7 @@
         scoring: {}
       });
 
-      // Disconnect cleanup
+      saveHostSession();
       gRef.child("hostConnected").onDisconnect().set(false);
 
       setupLobby();
@@ -115,8 +176,8 @@
     if (!q) { endGame(); return; }
 
     showScreen("screenQuestion");
-    el("qNumber").textContent = "سؤال " + (index + 1) + " من " + questions.length;
-    el("questionCounter").textContent = (index + 1) + " / " + questions.length;
+    el("qNumber").textContent = "سؤال " + (index + 1);
+    el("questionCounter").textContent = "سؤال " + (index + 1);
 
     // Apply slide-in animation
     var card = el("questionCard");
@@ -191,7 +252,88 @@
       var count = Object.keys(answers).length;
       var total = Object.keys(teams).length;
       el("answerCounter").textContent = "الفرق اللي جاوبت: " + count + " / " + total;
+      if (count === total && total > 0) {
+        el("answerCounter").classList.add("all-answered");
+      } else {
+        el("answerCounter").classList.remove("all-answered");
+      }
     });
+  }
+
+  // ===== Restore Question (after page refresh) =====
+  function restoreQuestion(index) {
+    currentIndex = index;
+    isRevealed = false;
+    var q = questions[index];
+    if (!q) { endGame(); return; }
+
+    showScreen("screenQuestion");
+    el("qNumber").textContent = "سؤال " + (index + 1);
+    el("questionCounter").textContent = "سؤال " + (index + 1);
+
+    var card = el("questionCard");
+    card.classList.remove("slide-in");
+
+    el("qText").textContent = q.question;
+
+    var choicesEl = el("choicesHost");
+    if (q.type === "Single-Choice") {
+      var letters = ["a", "b", "c", "d"];
+      var arabicLabels = { a: "أ", b: "ب", c: "ج", d: "د" };
+      choicesEl.innerHTML = letters.map(function (letter) {
+        return '<div class="choice" data-letter="' + letter.toUpperCase() + '">' +
+          '<span class="choice-letter">' + arabicLabels[letter] + '</span>' +
+          '<span>' + escapeHtml(q[letter]) + '</span>' +
+          '</div>';
+      }).join("");
+      choicesEl.classList.remove("hidden");
+    } else {
+      choicesEl.innerHTML = "";
+      choicesEl.classList.add("hidden");
+    }
+
+    el("teamAnswersWrap").classList.add("hidden");
+    el("revealWrap").classList.add("hidden");
+    el("manualRankWrap").classList.add("hidden");
+    el("btnReveal").classList.remove("hidden");
+    el("btnApplyScoring").classList.add("hidden");
+    el("btnManualRank").classList.add("hidden");
+    el("btnNext").classList.add("hidden");
+    el("answerCounter").textContent = "";
+
+    // Check current state from Firebase
+    gRef.once("value", function (snap) {
+      var game = snap.val() || {};
+      if (game.showAnswer) {
+        isRevealed = true;
+        el("btnReveal").classList.add("hidden");
+        if (q.type === "Single-Choice") {
+          revealSingleChoice(q);
+        } else {
+          revealOpenAnswer(q);
+        }
+      } else if (game.timerStopped) {
+        if (timer) timer.destroy();
+        el("timerHost").innerHTML = renderTimerSVG(0, 0, true);
+      } else {
+        var endAt = game.timerEndAt || 0;
+        var duration = CFG.timers[q.type] || 30;
+        if (timer) timer.destroy();
+        timer = new TimerEngine(
+          function (secs, frac) {
+            el("timerHost").innerHTML = renderTimerSVG(secs, frac, secs <= 5);
+          },
+          function () {
+            playBell();
+            el("timerHost").innerHTML = renderTimerSVG(0, 0, true);
+          }
+        );
+        timer.start(endAt, duration);
+      }
+    });
+
+    listenForAnswers(index);
+    updateScoreboard();
   }
 
   // ===== Reveal Answer =====
@@ -473,6 +615,7 @@
 
   // ===== End Game =====
   function endGame() {
+    clearHostSession();
     gRef.update({ status: "ended" });
     if (timer) timer.destroy();
     el("endGameWrap").classList.add("hidden");
