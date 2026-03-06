@@ -698,3 +698,33 @@ label{display:block;margin:14px 0 8px;font-weight:700;font-size:14px;color:var(-
 .host-view .score-name{font-size:18px;}
 .host-view .score-pts{font-size:22px;}
 .host-view .game-code{font-size:80px;letter-spacing:16px;}
+
+/* ================================
+   HOST TV — 60-TEAM OVERFLOW FIXES
+   ================================ */
+/* QR code — click to enlarge overlay */
+.qr-wrap{cursor:pointer;transition:transform .15s ease;}
+.qr-wrap:hover{transform:scale(1.05);}
+.qr-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;animation:qrFadeIn .25s ease;
+}
+.qr-overlay .qr-wrap{
+  padding:32px;border-radius:24px;background:#fff;
+  box-shadow:0 20px 80px rgba(0,0,0,.4);
+  transform:none;cursor:default;
+}
+.qr-overlay .qr-wrap:hover{transform:none;}
+.qr-overlay .qr-wrap img,
+.qr-overlay .qr-wrap canvas{
+  width:70vmin !important;height:70vmin !important;display:block;
+}
+@keyframes qrFadeIn{0%{opacity:0;}100%{opacity:1;}}
+
+.host-view .score-list{max-height:480px;overflow-y:auto;}
+.host-view .ranking{max-height:350px;overflow-y:auto;}
+.host-view .team-answers{max-height:400px;overflow-y:auto;}
+.final-list{max-height:500px;overflow-y:auto;}
+.host-view .teams-grid{max-height:320px;overflow-y:auto;}

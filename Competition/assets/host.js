@@ -136,6 +136,27 @@
       colorLight: "#FFFFFF"
     });
 
+    // Click QR to enlarge fullscreen
+    var qrWrap = el("qrCode").closest(".qr-wrap");
+    qrWrap.onclick = function () {
+      var overlay = document.createElement("div");
+      overlay.className = "qr-overlay";
+      var clone = qrWrap.cloneNode(true);
+      clone.onclick = function (e) { e.stopPropagation(); };
+      overlay.appendChild(clone);
+      overlay.onclick = function () { overlay.remove(); };
+      document.body.appendChild(overlay);
+    };
+
+    // Copy join link button
+    el("btnCopyLink").onclick = function () {
+      var btn = el("btnCopyLink");
+      navigator.clipboard.writeText(teamUrl.toString()).then(function () {
+        btn.innerHTML = "<span>✅</span> تم النسخ!";
+        setTimeout(function () { btn.innerHTML = "<span>📋</span> نسخ رابط الانضمام"; }, 2000);
+      });
+    };
+
     // Listen for teams joining
     gRef.child("teams").on("child_added", function (snap) {
       var teamId = snap.key;
