@@ -152,8 +152,8 @@
     el("btnCopyLink").onclick = function () {
       var btn = el("btnCopyLink");
       navigator.clipboard.writeText(teamUrl.toString()).then(function () {
-        btn.innerHTML = "<span>✅</span> تم النسخ!";
-        setTimeout(function () { btn.innerHTML = "<span>📋</span> نسخ رابط الانضمام"; }, 2000);
+        btn.textContent = "✅ تم النسخ!";
+        setTimeout(function () { btn.textContent = "📋 نسخ رابط الانضمام"; }, 2000);
       });
     };
 

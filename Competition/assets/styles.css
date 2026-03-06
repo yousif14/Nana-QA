@@ -158,6 +158,13 @@ body{
 }
 .btn--full{width:100%;}
 .btn--lg{padding:18px 40px;font-size:20px;border-radius:18px;}
+.btn--copy-link{
+  background:none;border:none;color:var(--muted);
+  font-size:13px;font-weight:700;cursor:pointer;
+  padding:6px 12px;border-radius:8px;
+  transition:background .15s ease;
+}
+.btn--copy-link:hover{background:rgba(212,175,55,.1);}
 
 /* ================================
    INPUTS
@@ -263,6 +270,23 @@ label{display:block;margin:14px 0 8px;font-weight:700;font-size:14px;color:var(-
 }
 .choice.correct .choice-letter{background:var(--green);color:#fff;}
 .choice.wrong .choice-letter{background:var(--danger);color:#fff;}
+
+/* Kahoot-style colored choices */
+.choice:nth-child(1){border-color:rgba(229,57,53,.25);}
+.choice:nth-child(1) .choice-letter{background:#E53935;color:#fff;}
+.choice:nth-child(1):hover{background:rgba(229,57,53,.08);}
+
+.choice:nth-child(2){border-color:rgba(30,136,229,.25);}
+.choice:nth-child(2) .choice-letter{background:#1E88E5;color:#fff;}
+.choice:nth-child(2):hover{background:rgba(30,136,229,.08);}
+
+.choice:nth-child(3){border-color:rgba(249,168,37,.25);}
+.choice:nth-child(3) .choice-letter{background:#F9A825;color:#fff;}
+.choice:nth-child(3):hover{background:rgba(249,168,37,.08);}
+
+.choice:nth-child(4){border-color:rgba(67,160,71,.25);}
+.choice:nth-child(4) .choice-letter{background:#43A047;color:#fff;}
+.choice:nth-child(4):hover{background:rgba(67,160,71,.08);}
 
 @keyframes correctPulse{
   0%{transform:scale(1);}30%{transform:scale(1.03);}60%{transform:scale(.99);}100%{transform:scale(1);}
