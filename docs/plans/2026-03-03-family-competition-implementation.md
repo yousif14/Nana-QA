@@ -946,7 +946,7 @@ Create `Competition/index.html`:
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-  <title>مسابقة القرقاعون الثقافية</title>
+  <title>مسابقة بيت ال محمود</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -977,8 +977,8 @@ Create `Competition/index.html`:
 
   <div class="landing" style="position:relative;z-index:1;">
     <div class="landing-icon">🌙</div>
-    <h1 class="landing-title">مسابقة القرقاعون الثقافية</h1>
-    <p class="landing-sub">يمعة القرقاعون 1447ه</p>
+    <h1 class="landing-title">مسابقة بيت ال محمود</h1>
+    <p class="landing-sub">يمعة عيد الفطر 1447ه</p>
     <div class="landing-buttons">
       <a href="./host.html" class="btn btn--primary btn--full btn--lg">المقدم (الشاشة الرئيسية)</a>
       <a href="./team.html" class="btn btn--gold btn--full btn--lg">انضم كفريق</a>
@@ -1010,7 +1010,7 @@ Create `Competition/host.html` — the full host page with all screen sections (
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>المقدم — مسابقة القرقاعون</title>
+  <title>المقدم — مسابقة بيت ال محمود</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -1058,7 +1058,7 @@ Create `Competition/host.html` — the full host page with all screen sections (
       <div class="brand">
         <div class="logo">🌙</div>
         <div>
-          <div class="brand-title">مسابقة القرقاعون الثقافية</div>
+          <div class="brand-title">مسابقة بيت ال محمود</div>
           <div class="brand-sub">شاشة المقدم</div>
         </div>
       </div>
@@ -1628,7 +1628,7 @@ Create `Competition/team.html`:
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-  <title>فريق — مسابقة القرقاعون</title>
+  <title>فريق — مسابقة بيت ال محمود</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -1659,7 +1659,7 @@ Create `Competition/team.html`:
       <div class="brand">
         <div class="logo">🌙</div>
         <div>
-          <div class="brand-title">مسابقة القرقاعون</div>
+          <div class="brand-title">مسابقة بيت ال محمود</div>
           <div class="brand-sub" id="teamNameHeader"></div>
         </div>
       </div>

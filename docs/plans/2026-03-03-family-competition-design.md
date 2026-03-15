@@ -7,7 +7,7 @@
 
 ## Overview
 
-A real-time family cultural competition quiz app for a family gathering (يمعة القرقاعون 1447ه). The host displays questions on a TV/projector while teams answer from their phones. Questions are sourced from a Google Sheet.
+A real-time family cultural competition quiz app for a family gathering (يمعة عيد الفطر 1447ه). The host displays questions on a TV/projector while teams answer from their phones. Questions are sourced from a Google Sheet.
 
 ## Architecture
 
