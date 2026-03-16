@@ -328,6 +328,16 @@
   function showLocked(answerText) {
     el("answerLockedWrap").classList.remove("hidden");
     el("lockedAnswerText").textContent = "إجابتك: " + answerText;
+    // Show elapsed time
+    var elapsed = timer ? timer.getElapsed() : 0;
+    var elapsedEl = document.getElementById("lockedElapsed");
+    if (!elapsedEl) {
+      elapsedEl = document.createElement("div");
+      elapsedEl.id = "lockedElapsed";
+      elapsedEl.className = "locked-elapsed";
+      el("answerLockedWrap").appendChild(elapsedEl);
+    }
+    elapsedEl.textContent = elapsed.toFixed(2) + " sec";
     el("openAnswerWrap").classList.add("hidden");
     el("teamChoices").classList.add("hidden");
   }
@@ -369,8 +379,8 @@
 
     // Determine weight class
     var weightClass;
-    if (delta >= 7) { weightClass = "points-gold"; }
-    else if (delta >= 5) { weightClass = "points-silver"; }
+    if (delta >= 5) { weightClass = "points-gold"; }
+    else if (delta >= 4) { weightClass = "points-silver"; }
     else if (delta >= 3) { weightClass = "points-bronze"; }
     else { weightClass = "points-simple"; }
 
@@ -390,7 +400,7 @@
       }
     }
 
-    // Play sound for 1st/2nd/3rd
+    // Play sound for top tiers
     if (delta >= 3) { playCorrect(); }
 
     // Show

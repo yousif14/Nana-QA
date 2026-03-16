@@ -136,6 +136,11 @@ TimerEngine.prototype.destroy = function() {
   if (this.rafId) cancelAnimationFrame(this.rafId);
 };
 
+TimerEngine.prototype.getElapsed = function() {
+  var startAt = this.endAt - this.duration * 1000;
+  return (Date.now() - startAt) / 1000;
+};
+
 // ===== Sound Effects (Web Audio API) =====
 var AudioCtx = window.AudioContext || window.webkitAudioContext;
 var audioCtx = null;
@@ -211,8 +216,8 @@ function renderTimerSVG(seconds, fraction, warning) {
 }
 
 // ===== Scoring Calculator =====
-function calculateScoring(answers, correctAnswer, questionType) {
-  var scoringTiers = CFG.scoring; // [7, 5, 3]
+function calculateScoring(answers, correctAnswer, questionType, questionStartTime) {
+  var scoringTiers = CFG.scoring; // [5, 4, 3, 2]
   var results = [];
 
   var entries = Object.keys(answers || {}).map(function(teamId) {
@@ -242,10 +247,12 @@ function calculateScoring(answers, correctAnswer, questionType) {
   var scoring = [];
   correct.forEach(function(r, i) {
     var points = i < scoringTiers.length ? scoringTiers[i] : 1;
-    scoring.push({ teamId: r.teamId, points: points, rank: i + 1, answer: r.answer, timestamp: r.timestamp });
+    var elapsed = questionStartTime ? ((r.timestamp - questionStartTime) / 1000).toFixed(2) : null;
+    scoring.push({ teamId: r.teamId, points: points, rank: i + 1, answer: r.answer, timestamp: r.timestamp, elapsed: elapsed });
   });
   wrong.forEach(function(r) {
-    scoring.push({ teamId: r.teamId, points: 0, rank: -1, answer: r.answer, timestamp: r.timestamp });
+    var elapsed = questionStartTime ? ((r.timestamp - questionStartTime) / 1000).toFixed(2) : null;
+    scoring.push({ teamId: r.teamId, points: 0, rank: -1, answer: r.answer, timestamp: r.timestamp, elapsed: elapsed });
   });
 
   return scoring;

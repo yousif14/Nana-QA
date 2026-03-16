@@ -401,10 +401,15 @@
     // Auto-score and show ranking
     gRef.child("answers/" + currentIndex).once("value", function (snap) {
       var answers = snap.val() || {};
-      var scoring = calculateScoring(answers, q.correct, "Single-Choice");
-      showRanking(scoring);
-      applyScores(scoring);
-      el("btnNext").classList.remove("hidden");
+      gRef.child("timerEndAt").once("value", function (teSnap) {
+        var timerEndAt = teSnap.val() || 0;
+        var duration = CFG.timers[q.type] || 30;
+        var questionStartTime = timerEndAt - duration * 1000;
+        var scoring = calculateScoring(answers, q.correct, "Single-Choice", questionStartTime);
+        showRanking(scoring);
+        applyScores(scoring);
+        el("btnNext").classList.remove("hidden");
+      });
     });
   }
 
@@ -412,6 +417,11 @@
     // Show team answers for host to mark
     gRef.child("answers/" + currentIndex).once("value", function (snap) {
       var answers = snap.val() || {};
+      gRef.child("timerEndAt").once("value", function (teSnap) {
+      var timerEndAt = teSnap.val() || 0;
+      var duration = CFG.timers[q.type] || 30;
+      var questionStartTime = timerEndAt - duration * 1000;
+
       var sorted = Object.keys(answers).map(function (tid) {
         return { teamId: tid, answer: answers[tid].answer, timestamp: answers[tid].timestamp || 0 };
       }).sort(function (a, b) { return a.timestamp - b.timestamp; });
@@ -419,8 +429,10 @@
       var list = el("teamAnswersList");
       list.innerHTML = sorted.map(function (a) {
         var teamName = teams[a.teamId] ? teams[a.teamId].name : a.teamId;
+        var elapsed = questionStartTime ? ((a.timestamp - questionStartTime) / 1000).toFixed(2) : "";
         return '<li class="team-answer-item" data-team-id="' + a.teamId + '">' +
           '<span class="team-name">' + escapeHtml(teamName) + '</span>' +
+          (elapsed ? '<span class="team-elapsed">' + elapsed + ' sec</span>' : '') +
           '<span class="team-response">' + escapeHtml(a.answer || "—") + '</span>' +
           '<button class="mark-btn" title="صحيح">✓</button>' +
           '</li>';
@@ -436,7 +448,8 @@
       // Show "apply scoring" and "manual rank" buttons
       el("btnApplyScoring").classList.remove("hidden");
       el("btnManualRank").classList.remove("hidden");
-    });
+      }); // end timerEndAt callback
+    }); // end answers callback
   }
 
   // Toggle correct mark on open-answer items (whole row is clickable)
@@ -461,14 +474,19 @@
       gRef.child("answers/" + currentIndex).once("value", function (snap) {
         var answers = snap.val() || {};
         var q = questions[currentIndex];
-        var scoring = calculateScoring(answers, q.correct, "Open-Answer");
-        showRanking(scoring);
-        applyScores(scoring);
-        el("btnApplyScoring").classList.add("hidden");
-        el("btnManualRank").classList.add("hidden");
-        el("manualRankWrap").classList.add("hidden");
-        el("btnNext").classList.remove("hidden");
-        playCorrect();
+        gRef.child("timerEndAt").once("value", function (teSnap) {
+          var timerEndAt = teSnap.val() || 0;
+          var duration = CFG.timers[q.type] || 30;
+          var questionStartTime = timerEndAt - duration * 1000;
+          var scoring = calculateScoring(answers, q.correct, "Open-Answer", questionStartTime);
+          showRanking(scoring);
+          applyScores(scoring);
+          el("btnApplyScoring").classList.add("hidden");
+          el("btnManualRank").classList.add("hidden");
+          el("manualRankWrap").classList.add("hidden");
+          el("btnNext").classList.remove("hidden");
+          playCorrect();
+        });
       });
     });
   });
@@ -516,10 +534,10 @@
     var item = badge.closest(".manual-rank-item");
     if (!item) return;
     var rank = parseInt(item.dataset.rank) || 0;
-    rank = (rank + 1) % 4; // 0=none, 1=1st, 2=2nd, 3=3rd
+    rank = (rank + 1) % 5; // 0=none, 1=1st, 2=2nd, 3=3rd, 4=4th
     item.dataset.rank = rank;
-    var labels = ["—", "1", "2", "3"];
-    var classes = ["", "rank-1", "rank-2", "rank-3"];
+    var labels = ["—", "1", "2", "3", "4"];
+    var classes = ["", "rank-1", "rank-2", "rank-3", "rank-other"];
     badge.textContent = labels[rank];
     badge.className = "rank-cycle-btn" + (classes[rank] ? " " + classes[rank] : "");
   });
@@ -527,7 +545,7 @@
   // Confirm manual ranking
   el("btnConfirmRank").addEventListener("click", function () {
     var items = document.querySelectorAll("#manualRankList .manual-rank-item");
-    var scoringTiers = CFG.scoring; // [7, 5, 3]
+    var scoringTiers = CFG.scoring; // [5, 4, 3, 2]
     var scoring = [];
 
     // First update correct marks in Firebase
@@ -546,12 +564,12 @@
       var teamId = item.dataset.teamId;
       var rank = parseInt(item.dataset.rank) || 0;
       var points;
-      if (rank >= 1 && rank <= 3) {
-        points = rank <= scoringTiers.length ? scoringTiers[rank - 1] : 1;
+      if (rank >= 1 && rank <= scoringTiers.length) {
+        points = scoringTiers[rank - 1];
       } else {
         points = 1; // correct but unranked gets participation point
       }
-      scoring.push({ teamId: teamId, points: points, rank: rank || 4 });
+      scoring.push({ teamId: teamId, points: points, rank: rank || (scoringTiers.length + 1) });
     }
 
     // Add wrong teams with 0 points
@@ -587,9 +605,11 @@
       var teamName = teams[s.teamId] ? teams[s.teamId].name : s.teamId;
       var rankClass = s.rank === 1 ? "rank-1" : s.rank === 2 ? "rank-2" : s.rank === 3 ? "rank-3" : s.rank > 0 ? "rank-other" : "rank-wrong";
       var rankLabel = s.rank > 0 ? s.rank : "✗";
+      var elapsedHtml = s.elapsed ? '<span class="rank-elapsed">' + s.elapsed + ' sec</span>' : '';
       return '<li>' +
         '<span class="rank-badge ' + rankClass + '">' + rankLabel + '</span>' +
         '<span class="rank-name">' + escapeHtml(teamName) + '</span>' +
+        elapsedHtml +
         '<span class="rank-points ' + (s.points === 0 ? 'zero' : '') + '">+' + s.points + '</span>' +
         '</li>';
     }).join("");

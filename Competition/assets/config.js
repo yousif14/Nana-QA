@@ -18,6 +18,6 @@ window.COMP_CONFIG = {
     "Single-Choice": 30,
     "Open-Answer": 60
   },
-  // Scoring: index-based (0=1st correct, 1=2nd, 2=3rd, rest=1)
-  scoring: [7, 5, 3]
+  // Scoring: index-based (0=1st correct, 1=2nd, etc., rest=1)
+  scoring: [5, 4, 3, 2]
 };
