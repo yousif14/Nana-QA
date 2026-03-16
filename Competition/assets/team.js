@@ -328,14 +328,15 @@
   function showLocked(answerText) {
     el("answerLockedWrap").classList.remove("hidden");
     el("lockedAnswerText").textContent = "إجابتك: " + answerText;
-    // Show elapsed time
+    // Show elapsed time inside the centered .answer-locked div
     var elapsed = timer ? timer.getElapsed() : 0;
     var elapsedEl = document.getElementById("lockedElapsed");
     if (!elapsedEl) {
       elapsedEl = document.createElement("div");
       elapsedEl.id = "lockedElapsed";
       elapsedEl.className = "locked-elapsed";
-      el("answerLockedWrap").appendChild(elapsedEl);
+      // Append inside .answer-locked (the centered container), after lockedAnswerText
+      el("lockedAnswerText").insertAdjacentElement("afterend", elapsedEl);
     }
     elapsedEl.textContent = elapsed.toFixed(2) + " sec";
     el("openAnswerWrap").classList.add("hidden");
