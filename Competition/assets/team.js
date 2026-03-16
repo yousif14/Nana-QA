@@ -248,6 +248,8 @@
     // Reset UI
     el("answerLockedWrap").classList.add("hidden");
     el("teamRevealWrap").classList.add("hidden");
+    var oldElapsed = document.getElementById("lockedElapsed");
+    if (oldElapsed) oldElapsed.remove();
 
     // Hide points badge from previous question
     var pointsPopup = el("pointsPopup");
