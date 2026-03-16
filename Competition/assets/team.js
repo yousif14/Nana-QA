@@ -328,19 +328,31 @@
   function showLocked(answerText) {
     el("answerLockedWrap").classList.remove("hidden");
     el("lockedAnswerText").textContent = "إجابتك: " + answerText;
-    // Show elapsed time inside the centered .answer-locked div
-    var elapsed = timer ? timer.getElapsed() : 0;
-    var elapsedEl = document.getElementById("lockedElapsed");
-    if (!elapsedEl) {
-      elapsedEl = document.createElement("div");
-      elapsedEl.id = "lockedElapsed";
-      elapsedEl.className = "locked-elapsed";
-      // Append inside .answer-locked (the centered container), after lockedAnswerText
-      el("lockedAnswerText").insertAdjacentElement("afterend", elapsedEl);
-    }
-    elapsedEl.textContent = elapsed.toFixed(2) + " sec";
     el("openAnswerWrap").classList.add("hidden");
     el("teamChoices").classList.add("hidden");
+
+    // Read back server timestamp to match host's elapsed calculation
+    var answerRef = gRef.child("answers/" + currentIndex + "/" + teamId);
+    answerRef.once("value", function (snap) {
+      var data = snap.val() || {};
+      var serverTs = data.timestamp || 0;
+      gRef.child("timerEndAt").once("value", function (teSnap) {
+        var timerEndAt = teSnap.val() || 0;
+        var q = questions[currentIndex];
+        var duration = CFG.timers[q.type] || 30;
+        var questionStartTime = timerEndAt - duration * 1000;
+        var elapsed = (serverTs - questionStartTime) / 1000;
+
+        var elapsedEl = document.getElementById("lockedElapsed");
+        if (!elapsedEl) {
+          elapsedEl = document.createElement("div");
+          elapsedEl.id = "lockedElapsed";
+          elapsedEl.className = "locked-elapsed";
+          el("lockedAnswerText").insertAdjacentElement("afterend", elapsedEl);
+        }
+        elapsedEl.textContent = elapsed.toFixed(2) + " sec";
+      });
+    });
   }
 
   // ===== Show Reveal on Team Side =====
