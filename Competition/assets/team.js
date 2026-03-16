@@ -330,29 +330,6 @@
     el("lockedAnswerText").textContent = "إجابتك: " + answerText;
     el("openAnswerWrap").classList.add("hidden");
     el("teamChoices").classList.add("hidden");
-
-    // Read back server timestamp to match host's elapsed calculation
-    var answerRef = gRef.child("answers/" + currentIndex + "/" + teamId);
-    answerRef.once("value", function (snap) {
-      var data = snap.val() || {};
-      var serverTs = data.timestamp || 0;
-      gRef.child("timerEndAt").once("value", function (teSnap) {
-        var timerEndAt = teSnap.val() || 0;
-        var q = questions[currentIndex];
-        var duration = CFG.timers[q.type] || 30;
-        var questionStartTime = timerEndAt - duration * 1000;
-        var elapsed = (serverTs - questionStartTime) / 1000;
-
-        var elapsedEl = document.getElementById("lockedElapsed");
-        if (!elapsedEl) {
-          elapsedEl = document.createElement("div");
-          elapsedEl.id = "lockedElapsed";
-          elapsedEl.className = "locked-elapsed";
-          el("lockedAnswerText").insertAdjacentElement("afterend", elapsedEl);
-        }
-        elapsedEl.textContent = elapsed.toFixed(2) + " sec";
-      });
-    });
   }
 
   // ===== Show Reveal on Team Side =====
@@ -382,6 +359,27 @@
       : "الإجابة المثالية:";
     el("teamPerfectText").textContent = q.perfect;
     el("teamRevealWrap").classList.remove("hidden");
+
+    // Show the elapsed time the host computed (from scoring data)
+    gRef.child("scoring/" + currentIndex).once("value", function (snap) {
+      var scoring = snap.val();
+      if (!scoring) return;
+      // scoring is an object keyed by push-id or index; find our team's entry
+      var entries = Object.values(scoring);
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].teamId === teamId && entries[i].elapsed != null) {
+          var elapsedEl = document.getElementById("lockedElapsed");
+          if (!elapsedEl) {
+            elapsedEl = document.createElement("div");
+            elapsedEl.id = "lockedElapsed";
+            elapsedEl.className = "locked-elapsed";
+            el("lockedAnswerText").insertAdjacentElement("afterend", elapsedEl);
+          }
+          elapsedEl.textContent = entries[i].elapsed + " sec";
+          break;
+        }
+      }
+    });
   }
 
   // ===== Points Popup =====
